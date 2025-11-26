@@ -1,164 +1,139 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, message, Space, Popconfirm } from 'antd';
-import { PlusOutlined, DeleteOutlined, SwapOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Input, message, Space, Descriptions, Alert } from 'antd';
+import { LoginOutlined, LogoutOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 function Accounts() {
-  const [accounts, setAccounts] = useState([]);
+  const [currentAccount, setCurrentAccount] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    fetchAccounts();
+    checkAuth();
   }, []);
 
-  const fetchAccounts = async () => {
+  const checkAuth = async () => {
+    try {
+      const response = await axios.get('/api/accounts/current');
+      if (response.data.success && response.data.result) {
+        setCurrentAccount(response.data.result);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      setIsAuthenticated(false);
+    }
+  };
+
+  const handleLogin = async (values) => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/accounts');
-      // 解析命令输出（简化处理）
-      setAccounts([]);
+      const response = await axios.post('/api/auth', {
+        email: values.email,
+        api_key: values.api_key
+      });
+      
+      if (response.data.success) {
+        message.success('认证成功！');
+        setCurrentAccount(response.data.account);
+        setIsAuthenticated(true);
+        form.resetFields();
+      }
     } catch (error) {
-      message.error('Failed to fetch accounts');
+      message.error(error.response?.data?.detail || '认证失败');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdd = async (values) => {
-    try {
-      await axios.post('/api/accounts', values);
-      message.success('Account added successfully');
-      setIsModalVisible(false);
-      form.resetFields();
-      fetchAccounts();
-    } catch (error) {
-      message.error('Failed to add account');
-    }
+  const handleLogout = () => {
+    setCurrentAccount(null);
+    setIsAuthenticated(false);
+    message.info('已清除认证信息');
   };
-
-  const handleSwitch = async (name) => {
-    try {
-      await axios.post(`/api/accounts/${name}/switch`);
-      message.success(`Switched to account: ${name}`);
-      fetchAccounts();
-    } catch (error) {
-      message.error('Failed to switch account');
-    }
-  };
-
-  const handleDelete = async (name) => {
-    try {
-      await axios.delete(`/api/accounts/${name}`);
-      message.success('Account deleted successfully');
-      fetchAccounts();
-    } catch (error) {
-      message.error('Failed to delete account');
-    }
-  };
-
-  const columns = [
-    {
-      title: 'Current',
-      dataIndex: 'current',
-      key: 'current',
-      width: 80,
-      render: (current) => current ? '⭐' : '',
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Account ID',
-      dataIndex: 'account_id',
-      key: 'account_id',
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<SwapOutlined />}
-            onClick={() => handleSwitch(record.name)}
-            disabled={record.current}
-          >
-            Switch
-          </Button>
-          <Popconfirm
-            title="Delete this account?"
-            onConfirm={() => handleDelete(record.name)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button danger icon={<DeleteOutlined />}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
 
   return (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <h1>Accounts Management</h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
-          Add Account
-        </Button>
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={accounts}
-        loading={loading}
-        rowKey="name"
+    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <h1>账户管理</h1>
+      
+      <Alert
+        message="认证方式说明"
+        description="使用 Cloudflare Email 和 API Key 进行认证。您可以在 Cloudflare Dashboard > My Profile > API Tokens > API Keys 中找到 Global API Key。"
+        type="info"
+        showIcon
+        style={{ marginBottom: 24 }}
       />
 
-      <Modal
-        title="Add New Account"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
-      >
-        <Form form={form} onFinish={handleAdd} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Account Name"
-            rules={[{ required: true, message: 'Please input account name!' }]}
-          >
-            <Input placeholder="e.g., production" />
-          </Form.Item>
-          <Form.Item
-            name="api_token"
-            label="API Token"
-            rules={[{ required: true, message: 'Please input API token!' }]}
-          >
-            <Input.Password placeholder="Your Cloudflare API token" />
-          </Form.Item>
-          <Form.Item name="email" label="Email (Optional)">
-            <Input placeholder="your@email.com" />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                Add Account
+      {!isAuthenticated ? (
+        <Card title="登录 Cloudflare 账户" style={{ marginTop: 16 }}>
+          <Form form={form} onFinish={handleLogin} layout="vertical">
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                { required: true, message: '请输入邮箱!' },
+                { type: 'email', message: '请输入有效的邮箱地址!' }
+              ]}
+            >
+              <Input placeholder="your@email.com" size="large" />
+            </Form.Item>
+            
+            <Form.Item
+              name="api_key"
+              label="API Key"
+              rules={[{ required: true, message: '请输入 API Key!' }]}
+            >
+              <Input.Password placeholder="您的 Cloudflare Global API Key" size="large" />
+            </Form.Item>
+            
+            <Form.Item>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                icon={<LoginOutlined />}
+                loading={loading}
+                size="large"
+                block
+              >
+                登录
               </Button>
-              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+            </Form.Item>
+          </Form>
+        </Card>
+      ) : (
+        <Card 
+          title="当前账户信息" 
+          style={{ marginTop: 16 }}
+          extra={
+            <Button 
+              danger 
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+            >
+              退出登录
+            </Button>
+          }
+        >
+          {currentAccount && (
+            <Descriptions column={1} bordered>
+              <Descriptions.Item label="账户名称">
+                {currentAccount.name}
+              </Descriptions.Item>
+              <Descriptions.Item label="账户 ID">
+                {currentAccount.id}
+              </Descriptions.Item>
+              <Descriptions.Item label="类型">
+                {currentAccount.type}
+              </Descriptions.Item>
+              {currentAccount.created_on && (
+                <Descriptions.Item label="创建时间">
+                  {new Date(currentAccount.created_on).toLocaleString()}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

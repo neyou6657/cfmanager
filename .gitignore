@@ -49,3 +49,12 @@ node_modules/
 # Temporary files
 tmp/
 temp/
+
+# Python virtual environment
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
