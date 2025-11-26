@@ -175,7 +175,9 @@ var kvKeyListCmd = &cobra.Command{
         }
 
         rc := cloudflare.AccountIdentifier(accountID)
-        response, err := c.API.ListWorkersKVKeys(c.Context, rc, namespaceID)
+        response, err := c.API.ListWorkersKVKeys(c.Context, rc, cloudflare.ListWorkersKVsParams{
+            NamespaceID: namespaceID,
+        })
         if err != nil {
             return fmt.Errorf("failed to list KV keys: %w", err)
         }
