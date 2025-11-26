@@ -120,7 +120,7 @@ async def health():
     return {"status": "healthy"}
 
 # 账号管理
-@app.post("/api/auth")
+@app.post("/auth")
 async def set_auth(account: Account):
     """设置认证信息"""
     current_auth["email"] = account.email
@@ -139,13 +139,13 @@ async def set_auth(account: Account):
         current_auth["api_key"] = ""
         raise HTTPException(status_code=401, detail="认证失败：" + str(e.detail))
 
-@app.get("/api/accounts")
+@app.get("/accounts")
 async def list_accounts():
     """列出所有账号"""
     data = make_request("GET", "/accounts")
     return data
 
-@app.get("/api/accounts/current")
+@app.get("/accounts/current")
 async def get_current_account():
     """获取当前账号信息"""
     account_id = get_account_id()
@@ -153,13 +153,13 @@ async def get_current_account():
     return data
 
 # Zone管理
-@app.get("/api/zones")
+@app.get("/zones")
 async def list_zones():
     """列出所有Zone"""
     data = make_request("GET", "/zones")
     return data
 
-@app.post("/api/zones")
+@app.post("/zones")
 async def create_zone(domain: Dict[str, str]):
     """创建新Zone"""
     account_id = get_account_id()
@@ -170,19 +170,19 @@ async def create_zone(domain: Dict[str, str]):
     data = make_request("POST", "/zones", json=payload)
     return data
 
-@app.get("/api/zones/{zone_id}")
+@app.get("/zones/{zone_id}")
 async def get_zone_info(zone_id: str):
     """获取Zone信息"""
     data = make_request("GET", f"/zones/{zone_id}")
     return data
 
-@app.delete("/api/zones/{zone_id}")
+@app.delete("/zones/{zone_id}")
 async def delete_zone(zone_id: str):
     """删除Zone"""
     data = make_request("DELETE", f"/zones/{zone_id}")
     return data
 
-@app.post("/api/zones/{zone_id}/purge")
+@app.post("/zones/{zone_id}/purge")
 async def purge_cache(zone_id: str):
     """清除缓存"""
     payload = {"purge_everything": True}
@@ -190,7 +190,7 @@ async def purge_cache(zone_id: str):
     return data
 
 # DNS记录管理
-@app.get("/api/zones/{zone_id}/dns")
+@app.get("/zones/{zone_id}/dns")
 async def list_dns_records(zone_id: str, type: Optional[str] = None):
     """列出DNS记录"""
     params = {}
@@ -199,7 +199,7 @@ async def list_dns_records(zone_id: str, type: Optional[str] = None):
     data = make_request("GET", f"/zones/{zone_id}/dns_records", params=params)
     return data
 
-@app.post("/api/zones/{zone_id}/dns")
+@app.post("/zones/{zone_id}/dns")
 async def create_dns_record(zone_id: str, record: DNSRecord):
     """创建DNS记录"""
     payload = {
@@ -215,27 +215,27 @@ async def create_dns_record(zone_id: str, record: DNSRecord):
     data = make_request("POST", f"/zones/{zone_id}/dns_records", json=payload)
     return data
 
-@app.delete("/api/zones/{zone_id}/dns/{record_id}")
+@app.delete("/zones/{zone_id}/dns/{record_id}")
 async def delete_dns_record(zone_id: str, record_id: str):
     """删除DNS记录"""
     data = make_request("DELETE", f"/zones/{zone_id}/dns_records/{record_id}")
     return data
 
-@app.get("/api/zones/{zone_id}/dns/export")
+@app.get("/zones/{zone_id}/dns/export")
 async def export_dns_records(zone_id: str):
     """导出DNS记录"""
     data = make_request("GET", f"/zones/{zone_id}/dns_records/export")
     return data
 
 # Worker管理
-@app.get("/api/workers")
+@app.get("/workers")
 async def list_workers():
     """列出所有Worker"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/workers/scripts")
     return data
 
-@app.post("/api/workers")
+@app.post("/workers")
 async def deploy_worker(worker: WorkerDeploy):
     """部署Worker"""
     account_id = get_account_id()
@@ -258,7 +258,7 @@ async def deploy_worker(worker: WorkerDeploy):
     
     return data
 
-@app.delete("/api/workers/{name}")
+@app.delete("/workers/{name}")
 async def delete_worker(name: str):
     """删除Worker"""
     account_id = get_account_id()
@@ -266,13 +266,13 @@ async def delete_worker(name: str):
     return data
 
 # Worker路由
-@app.get("/api/zones/{zone_id}/routes")
+@app.get("/zones/{zone_id}/routes")
 async def list_worker_routes(zone_id: str):
     """列出Worker路由"""
     data = make_request("GET", f"/zones/{zone_id}/workers/routes")
     return data
 
-@app.post("/api/zones/{zone_id}/routes")
+@app.post("/zones/{zone_id}/routes")
 async def create_worker_route(zone_id: str, route: WorkerRoute):
     """创建Worker路由"""
     payload = {
@@ -282,21 +282,21 @@ async def create_worker_route(zone_id: str, route: WorkerRoute):
     data = make_request("POST", f"/zones/{zone_id}/workers/routes", json=payload)
     return data
 
-@app.delete("/api/zones/{zone_id}/routes/{route_id}")
+@app.delete("/zones/{zone_id}/routes/{route_id}")
 async def delete_worker_route(zone_id: str, route_id: str):
     """删除Worker路由"""
     data = make_request("DELETE", f"/zones/{zone_id}/workers/routes/{route_id}")
     return data
 
 # Pages管理
-@app.get("/api/pages")
+@app.get("/pages")
 async def list_pages():
     """列出所有Pages项目"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/pages/projects")
     return data
 
-@app.post("/api/pages")
+@app.post("/pages")
 async def create_pages_project(project: PagesProject):
     """创建Pages项目"""
     account_id = get_account_id()
@@ -307,28 +307,28 @@ async def create_pages_project(project: PagesProject):
     data = make_request("POST", f"/accounts/{account_id}/pages/projects", json=payload)
     return data
 
-@app.get("/api/pages/{project_name}")
+@app.get("/pages/{project_name}")
 async def get_pages_info(project_name: str):
     """获取Pages项目信息"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/pages/projects/{project_name}")
     return data
 
-@app.delete("/api/pages/{project_name}")
+@app.delete("/pages/{project_name}")
 async def delete_pages_project(project_name: str):
     """删除Pages项目"""
     account_id = get_account_id()
     data = make_request("DELETE", f"/accounts/{account_id}/pages/projects/{project_name}")
     return data
 
-@app.get("/api/pages/{project_name}/deployments")
+@app.get("/pages/{project_name}/deployments")
 async def list_pages_deployments(project_name: str):
     """列出Pages部署"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/pages/projects/{project_name}/deployments")
     return data
 
-@app.post("/api/pages/{project_name}/deployments")
+@app.post("/pages/{project_name}/deployments")
 async def deploy_pages(
     project_name: str,
     branch: str = Form("main"),
@@ -366,14 +366,14 @@ async def deploy_pages(
     return data
 
 # KV管理
-@app.get("/api/kv/namespaces")
+@app.get("/kv/namespaces")
 async def list_kv_namespaces():
     """列出KV命名空间"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/storage/kv/namespaces")
     return data
 
-@app.post("/api/kv/namespaces")
+@app.post("/kv/namespaces")
 async def create_kv_namespace(namespace: KVNamespace):
     """创建KV命名空间"""
     account_id = get_account_id()
@@ -381,14 +381,14 @@ async def create_kv_namespace(namespace: KVNamespace):
     data = make_request("POST", f"/accounts/{account_id}/storage/kv/namespaces", json=payload)
     return data
 
-@app.delete("/api/kv/namespaces/{namespace_id}")
+@app.delete("/kv/namespaces/{namespace_id}")
 async def delete_kv_namespace(namespace_id: str):
     """删除KV命名空间"""
     account_id = get_account_id()
     data = make_request("DELETE", f"/accounts/{account_id}/storage/kv/namespaces/{namespace_id}")
     return data
 
-@app.get("/api/kv/namespaces/{namespace_id}/keys")
+@app.get("/kv/namespaces/{namespace_id}/keys")
 async def list_kv_keys(namespace_id: str, prefix: Optional[str] = None):
     """列出KV键"""
     account_id = get_account_id()
@@ -398,7 +398,7 @@ async def list_kv_keys(namespace_id: str, prefix: Optional[str] = None):
     data = make_request("GET", f"/accounts/{account_id}/storage/kv/namespaces/{namespace_id}/keys", params=params)
     return data
 
-@app.get("/api/kv/namespaces/{namespace_id}/keys/{key}")
+@app.get("/kv/namespaces/{namespace_id}/keys/{key}")
 async def get_kv_value(namespace_id: str, key: str):
     """获取KV值"""
     account_id = get_account_id()
@@ -414,7 +414,7 @@ async def get_kv_value(namespace_id: str, key: str):
     else:
         raise HTTPException(status_code=response.status_code, detail="Key not found")
 
-@app.put("/api/kv/namespaces/{namespace_id}/keys")
+@app.put("/kv/namespaces/{namespace_id}/keys")
 async def put_kv_value(namespace_id: str, pair: KVPair):
     """设置KV值"""
     account_id = get_account_id()
@@ -431,7 +431,7 @@ async def put_kv_value(namespace_id: str, pair: KVPair):
     
     return data
 
-@app.delete("/api/kv/namespaces/{namespace_id}/keys/{key}")
+@app.delete("/kv/namespaces/{namespace_id}/keys/{key}")
 async def delete_kv_key(namespace_id: str, key: str):
     """删除KV键"""
     account_id = get_account_id()
@@ -439,14 +439,14 @@ async def delete_kv_key(namespace_id: str, key: str):
     return data
 
 # R2管理
-@app.get("/api/r2/buckets")
+@app.get("/r2/buckets")
 async def list_r2_buckets():
     """列出R2桶"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/r2/buckets")
     return data
 
-@app.post("/api/r2/buckets")
+@app.post("/r2/buckets")
 async def create_r2_bucket(bucket: R2Bucket):
     """创建R2桶"""
     account_id = get_account_id()
@@ -457,14 +457,14 @@ async def create_r2_bucket(bucket: R2Bucket):
     data = make_request("POST", f"/accounts/{account_id}/r2/buckets", json=payload)
     return data
 
-@app.get("/api/r2/buckets/{bucket_name}")
+@app.get("/r2/buckets/{bucket_name}")
 async def get_r2_bucket_info(bucket_name: str):
     """获取R2桶信息"""
     account_id = get_account_id()
     data = make_request("GET", f"/accounts/{account_id}/r2/buckets/{bucket_name}")
     return data
 
-@app.delete("/api/r2/buckets/{bucket_name}")
+@app.delete("/r2/buckets/{bucket_name}")
 async def delete_r2_bucket(bucket_name: str):
     """删除R2桶"""
     account_id = get_account_id()
