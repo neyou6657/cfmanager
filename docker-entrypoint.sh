@@ -3,10 +3,13 @@ set -e
 
 echo "🚀 Starting Cloudflare Manager..."
 
-# Initialize default account if credentials are provided
-if [ -n "$CLOUDFLARE_TOKEN" ]; then
-    echo "📝 Initializing default account..."
-    /app/cloudflare-manager/cfm account add default --token "$CLOUDFLARE_TOKEN" --email "$CLOUDFLARE_EMAIL" || true
+# Set environment variables if provided
+if [ -n "$CF_EMAIL" ] && [ -n "$CF_API_KEY" ]; then
+    echo "📝 Cloudflare credentials detected from environment"
+    export CF_EMAIL="$CF_EMAIL"
+    export CF_API_KEY="$CF_API_KEY"
+else
+    echo "⚠️  No Cloudflare credentials found. Please login via the web interface."
 fi
 
 echo "🌐 Starting FastAPI backend on port 7860..."
