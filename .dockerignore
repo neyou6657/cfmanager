@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Node modules
+frontend/node_modules
+frontend/build
+
+# Go
+cloudflare-manager/cfm
+cloudflare-manager/vendor
+
+# Python
+backend/__pycache__
+backend/*.pyc
+backend/.env
+backend/venv
+
+# Config
+.cloudflare-manager.yaml
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

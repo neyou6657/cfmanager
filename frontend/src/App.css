@@ -1,0 +1,23 @@
+.App {
+  text-align: center;
+}
+
+.site-layout .site-layout-background {
+  background: #fff;
+}
+
+.logo {
+  height: 32px;
+  margin: 16px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ant-layout-sider-children a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.code-editor {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
